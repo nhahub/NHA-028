@@ -1,0 +1,25 @@
+# Training Environment
+# Python 3.12.4
+# Ultralytics 8.3.220
+# Torch 2.5.1 + CUDA 12.1
+# GPU: NVIDIA Quadro P1000 (4GB VRAM)
+
+# Python version
+python==3.12.4
+
+# Core deep learning dependencies (matching your actual environment)
+torch==2.5.1
+torchvision==0.20.1
+
+# YOLOv8 version used for training
+ultralytics==8.3.220
+
+# Essential utilities
+opencv-python
+numpy
+pandas
+matplotlib
+pyyaml
+tqdm
+scipy
+psutil
