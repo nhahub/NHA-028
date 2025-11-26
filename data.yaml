@@ -1,0 +1,18 @@
+# Dataset paths
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+# Number of classes
+nc: 1
+
+# Class names
+names: ['fracture']
+
+# Roboflow dataset information
+roboflow:
+  workspace: projects-bxw0f
+  project: bone-fracture-vqdiz-9t1kd
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/projects-bxw0f/bone-fracture-vqdiz-9t1kd/dataset/1
