@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Doc - AI-Powered Medical Diagnostics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/chat.js" defer></script>
+    <script src="js/script.js" defer></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>AI Doc</span>
+                <small>Medical AI Platform</small>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="#home" class="active">Home</a>
+                <a href="#diagnostic">Diagnostic</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <a href="#diagnostic" class="btn btn-primary">Start Diagnosis</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>AI-Powered Medical Diagnostics</h1>
+                <p class="hero-subtitle">Revolutionizing healthcare with cutting-edge artificial intelligence for precise and rapid medical image analysis. Our advanced diagnostic platform helps healthcare professionals detect and diagnose medical conditions with unprecedented accuracy.</p>
+                
+                <div class="hero-features">
+                    <div class="feature">
+                        <i class="fas fa-bolt"></i>
+                        <span>Instant Analysis</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Private</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-user-md"></i>
+                        <span>Doctor-Approved</span>
+                    </div>
+                </div>
+                
+                <div class="hero-buttons">
+                    <a href="#diagnostic" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Try AI Models
+                    </a>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-play-circle"></i> Watch Demo
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="images/image.png" alt="AI Diagnostic Interface">
+            </div>
+        </div>
+    </section>
+
+    <!-- Diagnostic Section -->
+    <section class="diagnostic" id="diagnostic">
+        <div class="container">
+            <h2>AI-Powered Diagnostic System</h2>
+            <div class="upload-container">
+                <div class="model-selection-container">
+                    <h3>Select Diagnostic Model</h3>
+                    <div class="model-options">
+                        <div class="model-option" data-model="primary">
+                            <div class="model-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="model-info">
+                                <h4>Primary Classification</h4>
+                                <p>Automatically detects and classifies the body part in the image</p>
+                            </div>
+                            <input type="radio" name="model" value="primary" id="model-primary" checked>
+                        </div>
+                        
+                        <div class="model-option" data-model="brain_tumor">
+                            <div class="model-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="model-info">
+                                <h4>Brain Tumor Detection</h4>
+                                <p>Specialized in detecting and classifying brain tumors from MRI scans</p>
+                            </div>
+                            <input type="radio" name="model" value="brain_tumor" id="model-brain">
+                        </div>
+                        
+                        <div class="model-option" data-model="fracture">
+                            <div class="model-icon">
+                                <i class="fas fa-bone"></i>
+                            </div>
+                            <div class="model-info">
+                                <h4>Fracture Detection</h4>
+                                <p>Detects bone fractures in X-ray images</p>
+                            </div>
+                            <input type="radio" name="model" value="fracture" id="model-fracture">
+                        </div>
+                        
+                        <div class="model-option" data-model="lung_disease">
+                            <div class="model-icon">
+                                <i class="fas fa-lungs"></i>
+                            </div>
+                            <div class="model-info">
+                                <h4>Lung Disease Detection</h4>
+                                <p>Identifies lung conditions like pneumonia and COVID-19</p>
+                            </div>
+                            <input type="radio" name="model" value="lung_disease" id="model-lung">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selected-model-banner" id="selectedModelBanner">
+                    <span>Selected Model: <strong>Primary Classification</strong></span>
+                </div>
+                <div class="upload-area" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Upload Medical Image</h3>
+                    <p>Drag & drop an image or <span>browse files</span></p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-steps">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Uploading Image</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-text">Analyzing</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Results</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Initializing analysis...</div>
+                </div>
+                <div class="result-container" id="resultContainer" style="display: none;">
+                    <h3>Analysis Results</h3>
+                    <div class="result-content">
+                        <div class="result-image">
+                            <img id="previewImage" src="" alt="Uploaded Image">
+                        </div>
+                        <div class="result-details">
+                            <div class="result-item">
+                                <span class="label">Body Part:</span>
+                                <span class="value" id="bodyPart">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">Condition:</span>
+                                <span class="value" id="condition">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="label">Confidence:</span>
+                                <span class="value" id="confidence">-</span>
+                            </div>
+                            <div class="result-item full-width">
+                                <span class="label">Recommendations:</span>
+                                <p id="recommendations">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="newAnalysis">New Analysis</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2>How AI Doc Works</h2>
+            <div class="works-container">
+                <div class="works-image">
+                    <img src="images/d8a48aa576a92d57b0028824517688c3.jpg" alt="AI Doc Workflow">
+                </div>
+                <div class="works-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Upload Your Medical Image</h3>
+                            <p>Simply drag and drop your medical image or click to browse files from your device.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>AI Analysis</h3>
+                            <p>Our advanced AI algorithms analyze the image to detect potential medical conditions.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Get Results</h3>
+                            <p>Receive detailed analysis, potential conditions, and recommended next steps.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Models Section -->
+    <section class="ai-models" id="models">
+        <div class="container">
+            <h2>Our AI Models</h2>
+            <div class="model-grid">
+                <div class="model-card">
+                    <div class="model-icon blue">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Primary Classification</h3>
+                    <p>Identifies the body part in the medical image for accurate routing to specialized models.</p>
+                    <button class="btn btn-outline">Run Model</button>
+                </div>
+                <div class="model-card">
+                    <div class="model-icon green">
+                        <i class="fas fa-x-ray"></i>
+                    </div>
+                    <h3>Brain Tumor Detection</h3>
+                    <p>Advanced neural network for detecting and classifying brain tumors with high precision.</p>
+                    <button class="btn btn-outline">Run Model</button>
+                </div>
+                <div class="model-card">
+                    <div class="model-card">
+                        <div class="model-icon orange">
+                            <i class="fas fa-bone"></i>
+                        </div>
+                        <h3>Fracture Detection</h3>
+                        <p>Detects and classifies fractures in upper and lower extremities from X-ray images.</p>
+                        <button class="btn btn-outline">Run Model</button>
+                    </div>
+                </div>
+                <div class="model-card">
+                    <div class="model-icon purple">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <h3>Lung Disease Detection</h3>
+                    <p>Identifies various lung conditions including pneumonia, COVID-19, and tuberculosis.</p>
+                    <button class="btn btn-outline">Run Model</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2>About AI Doc</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Advanced AI Technology</h3>
+                    <p>State-of-the-art deep learning models trained on thousands of medical images for accurate diagnosis.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Rapid Analysis</h3>
+                    <p>Get results in seconds, not days. Our AI processes images in real-time for quick diagnosis.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Medical Grade Security</h3>
+                    <p>Your data is encrypted and secure, compliant with healthcare data protection standards.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h3>Expert Validated</h3>
+                    <p>Our models are developed and validated by leading medical professionals.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="get-in-touch" id="contact">
+        <div class="container">
+            <h2>Get in Touch</h2>
+            <p class="section-subtitle">Interested in collaborating on medical AI research or have questions about our diagnostic models? We'd love to hear from you.</p>
+            
+            <div class="contact-container">
+                <div class="contact-form-container">
+                    <h3>Send us a Message</h3>
+                    <form id="contactForm" class="contact-form">
+                        <div class="form-group">
+                            <label for="name">Full Name *</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="organization">Organization</label>
+                            <input type="text" id="organization">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea id="message" rows="5" maxlength="500" required></textarea>
+                            <div class="char-count"><span id="charCount">0</span>/500 characters</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+                
+                <div class="contact-details">
+                    <div class="contact-info">
+                        <h3>Contact Information</h3>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="info-content">
+                                <h4>Email Us</h4>
+                                <a href="mailto:research@aidoc.com">research@aidoc.com</a>
+                                <p class="info-note">Get in touch for research collaborations</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="info-content">
+                                <h4>Call Us</h4>
+                                <a href="tel:+15551234567">+1 (555) 123-4567</a>
+                                <p class="info-note">Monday to Friday, 9 AM - 6 PM EST</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <h4>Visit Us</h4>
+                                <p>Medical AI Research Center<br>
+                                123 Innovation Drive, Tech City, TC 12345</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="research-partnerships">
+                        <h3>Research Partnerships</h3>
+                        <p>We're actively seeking partnerships with medical institutions, research hospitals, and healthcare organizations to advance AI-powered diagnostics.</p>
+                        
+                        <div class="partnership-tags">
+                            <span class="tag">Clinical Trials</span>
+                            <span class="tag">Data Collaboration</span>
+                            <span class="tag">Research Grants</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="logo">
+                        <i class="fas fa-brain"></i>
+                        <span>AI Doc</span>
+                    </div>
+                    <p>Advanced AI-powered diagnostic platform for accurate detection of bone fractures, brain tumors, and lung diseases. Empowering healthcare professionals with cutting-edge technology.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#diagnostic">Diagnostic</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p> AI Doc is a research prototype. It does not replace professional medical diagnosis. Always consult with qualified healthcare professionals for medical decisions. This tool is for educational and research purposes only.</p>
+                </div>
+                <div class="copyright">
+                    <p>&copy; 2025 AI Doc Copyright.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Chat Widget -->
+    <div class="ai-chat-widget" id="aiChatWidget">
+        <div class="chat-header">
+            <div class="chat-title">
+                <div class="chat-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="chat-info">
+                    <span>AI Medical Assistant</span>
+                    <small>Online</small>
+                </div>
+            </div>
+            <div class="chat-actions">
+                <button class="chat-minimize" id="minimizeChat">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="chat-close" id="closeChat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">
+                        <p>Hello! I'm your AI medical assistant. I can help you with medical information, analyze symptoms, and provide health-related guidance. How can I assist you today?</p>
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+                <button id="sendMessage" aria-label="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="chat-suggestions" id="chatSuggestions">
+                <button class="suggestion-btn">How to analyze an X-ray?</button>
+                <button class="suggestion-btn">Tell me about brain tumors</button>
+                <button class="suggestion-btn">What symptoms indicate pneumonia?</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="chat-toggle" id="chatToggle" aria-label="Open chat">
+        <i class="fas fa-comment-medical"></i>
+        <span class="notification-badge"></span>
+    </button>
+
+    <!-- script.js already loaded with defer in the head -->
+</body>
+</html>
