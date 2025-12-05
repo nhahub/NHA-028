@@ -22,6 +22,19 @@ try:
 except Exception:
     YOLO = None  # Fallback if ultralytics isn't available
 
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import model_from_json
+    print(f"TensorFlow version: {tf.__version__}")
+except ImportError:
+    tf = None
+    model_from_json = None
+    print("TensorFlow not installed or failed to load")
+except Exception as e:
+    tf = None
+    model_from_json = None
+    print(f"Error loading TensorFlow: {e}")
+
 # ----------------------------------------------------------------------------
 # Paths
 # ----------------------------------------------------------------------------
@@ -29,10 +42,14 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PRIMARY_DIR = os.path.join(ROOT, 'models', 'pimary class')  # note: folder name as provided
 MRI_DIR = os.path.join(ROOT, 'models', 'mri_seg')
 Bone_DIR = os.path.join(ROOT, 'models', 'Bone_Detection_Model')
+LUNG_DIR = os.path.join(ROOT, 'models', 'lung_tumor')
 
 PRIMARY_MODEL_PATH = os.path.join(PRIMARY_DIR, 'scan_classifier_model.pth')
-MRI_MODEL_PATH = os.path.join(MRI_DIR, 'best.pth')
-BONE_MODEL_PATH = os.path.join(Bone_DIR, 'bone_best.pth')
+MRI_MODEL_PATH = os.path.join(MRI_DIR, 'best.pt')
+BONE_MODEL_PATH = os.path.join(Bone_DIR, 'bone_best.pt')
+LUNG_MODEL_JSON = os.path.join(LUNG_DIR, 'lung_cancer_model.json')
+LUNG_MODEL_WEIGHTS = os.path.join(LUNG_DIR, 'lung_cancer_model.weights.h5')
+
 # External model API endpoints (can be overridden via env vars)
 MRI_API_ENDPOINT = os.environ.get('MRI_API', 'http://localhost:8000/predict')
 # Bone detection API included in the workspace — default to its local port
@@ -54,6 +71,12 @@ CLASS_NAMES = {
     0: 'Brain',
     1: 'Bone',
     2: 'Chest',
+}
+
+LUNG_CLASS_NAMES = {
+    0: 'Normal',
+    1: 'Benign',
+    2: 'Malignant'
 }
 
 
@@ -96,39 +119,56 @@ except Exception as e:
     print(primary_loaded_error)
 
 # ----------------------------------------------------------------------------
-# MRI segmentation (YOLO) setup
+# Model Loading Helpers
 # ----------------------------------------------------------------------------
-seg_model = None
-seg_loaded_error: Optional[str] = None
-
-# Bone (fracture) detection model
-bone_model = None
-bone_loaded_error: Optional[str] = None
-
-if YOLO is None:
-    seg_loaded_error = "ultralytics not installed; MRI segmentation unavailable"
-else:
+def load_yolo_model(path: str, model_name: str) -> tuple[Optional[Any], Optional[str]]:
+    if YOLO is None:
+        return None, "ultralytics not installed"
     try:
-        if os.path.exists(MRI_MODEL_PATH):
-            seg_model = YOLO(MRI_MODEL_PATH)
-            print(f"MRI segmentation model loaded from {MRI_MODEL_PATH}")
+        if os.path.exists(path):
+            model = YOLO(path)
+            print(f"{model_name} loaded from {path}")
+            return model, None
         else:
-            seg_loaded_error = f"Segmentation model file not found at {MRI_MODEL_PATH}"
-            print(seg_loaded_error)
+            error = f"{model_name} file not found at {path}"
+            print(error)
+            return None, error
     except Exception as e:
-        seg_loaded_error = f"Failed to load MRI segmentation model: {e}"
-        print(seg_loaded_error)
-    # Try loading local bone model if available
+        error = f"Failed to load {model_name}: {e}"
+        print(error)
+        return None, error
+
+def load_keras_model(json_path: str, weights_path: str, model_name: str) -> tuple[Optional[Any], Optional[str]]:
+    if tf is None:
+        return None, "TensorFlow not installed"
     try:
-        if os.path.exists(BONE_MODEL_PATH):
-            bone_model = YOLO(BONE_MODEL_PATH)
-            print(f"Bone detection model loaded from {BONE_MODEL_PATH}")
+        if os.path.exists(json_path) and os.path.exists(weights_path):
+            with open(json_path, 'r') as json_file:
+                loaded_model_json = json_file.read()
+            model = model_from_json(loaded_model_json)
+            model.load_weights(weights_path)
+            print(f"{model_name} loaded from {os.path.dirname(json_path)}")
+            return model, None
         else:
-            bone_loaded_error = f"Bone model file not found at {BONE_MODEL_PATH}"
-            print(bone_loaded_error)
+            error = f"{model_name} files not found"
+            print(error)
+            return None, error
     except Exception as e:
-        bone_loaded_error = f"Failed to load bone detection model: {e}"
-        print(bone_loaded_error)
+        error = f"Failed to load {model_name}: {e}"
+        print(error)
+        return None, error
+
+# ----------------------------------------------------------------------------
+# Model Initialization
+# ----------------------------------------------------------------------------
+# MRI segmentation (YOLO)
+seg_model, seg_loaded_error = load_yolo_model(MRI_MODEL_PATH, "MRI segmentation model")
+
+# Bone (fracture) detection (YOLO)
+bone_model, bone_loaded_error = load_yolo_model(BONE_MODEL_PATH, "Bone detection model")
+
+# Lung tumor model (Keras)
+lung_model, lung_loaded_error = load_keras_model(LUNG_MODEL_JSON, LUNG_MODEL_WEIGHTS, "Lung tumor model")
 
 # ----------------------------------------------------------------------------
 # Helpers
@@ -207,6 +247,78 @@ def decode_base64_to_bgr(b64: str) -> Optional[np.ndarray]:
         return None
 
 
+def predict_yolo(model: Any, image: np.ndarray, model_name: str, resize_dim: Optional[tuple] = None) -> tuple[List[Dict[str, Any]], bool, str, np.ndarray]:
+    """Helper for YOLO model prediction."""
+    try:
+        if resize_dim:
+            input_img = cv2.resize(image, resize_dim)
+        else:
+            input_img = image
+            
+        results = model.predict(input_img)
+        res = results[0]
+        annotated_img = res.plot()
+        
+        detections = []
+        if getattr(res, 'boxes', None):
+            for box in res.boxes:
+                cls_id = int(box.cls[0])
+                conf = float(box.conf[0])
+                class_name = model.names.get(cls_id, str(cls_id)) if hasattr(model, 'names') else str(cls_id)
+                detections.append({'class': class_name, 'confidence': conf})
+        
+        return detections, True, f"{model_name} completed.", annotated_img
+    except Exception as e:
+        return [{'error': f"{model_name} failed: {e}"}], False, f"{model_name} attempted but encountered an error.", image
+
+
+def predict_keras(model: Any, image: np.ndarray, class_names: Dict[int, str], model_name: str) -> tuple[List[Dict[str, Any]], bool, str, np.ndarray]:
+    """Helper for Keras model prediction."""
+    try:
+        # Preprocess: BGR -> RGB, Resize 224x224, Normalize
+        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_resized = cv2.resize(img_rgb, (224, 224))
+        img_normalized = img_resized.astype('float32') / 255.0
+        img_batch = np.expand_dims(img_normalized, axis=0)
+        
+        predictions = model.predict(img_batch)
+        class_idx = np.argmax(predictions[0])
+        confidence = float(predictions[0][class_idx])
+        class_name = class_names.get(class_idx, f"Class {class_idx}")
+        
+        # Annotate
+        annotated_img = image.copy()
+        cv2.putText(annotated_img, f"{class_name}: {confidence:.2f}", (10, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        
+        return [{'class': class_name, 'confidence': confidence}], True, f"{model_name}: {class_name} ({confidence:.1%})", annotated_img
+    except Exception as e:
+        return [{'error': f"{model_name} failed: {e}"}], False, f"{model_name} attempted but encountered an error.", image
+
+
+def handle_external_api(url: str, img_bytes: bytes, model_name: str) -> tuple[List[Dict[str, Any]], bool, str, Optional[np.ndarray]]:
+    """Helper for forwarding to external APIs."""
+    forward = forward_image_to_api(url, img_bytes)
+    if forward.get('ok'):
+        data = forward.get('json', {})
+        # Handle various response formats
+        labels = data.get('detections', []) or data.get('labels', []) or data.get('predictions', [])
+        
+        # Handle status/summary if present (e.g. fracture API)
+        status = data.get('status') or data.get('summary')
+        if status:
+            labels.insert(0, {'status': status, 'num_fractures': data.get('num_fractures')})
+            
+        b64 = data.get('annotated_image') or data.get('image_base64') or data.get('annotated_image_base64')
+        annotated_img = None
+        if b64:
+            annotated_img = decode_base64_to_bgr(b64)
+            
+        return labels, True, f"{model_name} performed via external API.", annotated_img
+    else:
+        return [{'error': f"{model_name} API forward failed: {forward.get('error')}"}], False, f"{model_name} model not integrated or API unreachable.", None
+
+
 # ----------------------------------------------------------------------------
 # Routes
 # ----------------------------------------------------------------------------
@@ -219,6 +331,10 @@ def index_root():
 @app.get('/index.html')
 def index_html():
     return send_from_directory(ROOT, 'index.html')
+
+@app.get('/<path:filename>.html')
+def serve_html(filename):
+    return send_from_directory(ROOT, f'{filename}.html')
 
 @app.get('/css/<path:filename>')
 def serve_css(filename: str):
@@ -332,189 +448,57 @@ def analyze():
                     'class_name': class_name,
                     'confidence': confidence,
                 })
+            
             # Route to specialized models depending on detected body part
             cid = classification.get('class_id')
+            
             # Brain -> try local seg_model first, otherwise forward to MRI API
             if cid == 0:
                 if seg_model is not None:
-                    try:
-                        results = seg_model.predict(bgr_enhanced)
-                        res = results[0]
-                        annotated_bgr = res.plot()
-                        if getattr(res, 'boxes', None):
-                            for box in res.boxes:
-                                cls_id = int(box.cls[0])
-                                conf = float(box.conf[0])
-                                class_name = seg_model.names.get(cls_id, str(cls_id)) if hasattr(seg_model, 'names') else str(cls_id)
-                                seg_result_labels.append({'class': class_name, 'confidence': conf})
-                        seg_performed = True
-                    except Exception as e:
-                        seg_result_labels.append({'error': f'Segmentation failed: {e}'})
+                    seg_result_labels, seg_performed, notes, annotated_bgr = predict_yolo(seg_model, bgr_enhanced, "Brain tumor detection")
                 else:
-                    # Try forwarding to external MRI API
-                    forward = forward_image_to_api(MRI_API_ENDPOINT, img_bytes)
-                    if forward.get('ok'):
-                        data = forward.get('json', {})
-                        seg_result_labels = data.get('labels', []) or data.get('labels', [])
-                        b64 = data.get('image_base64') or data.get('annotated_image_base64')
-                        if b64:
-                            img = decode_base64_to_bgr(b64)
-                            if img is not None:
-                                annotated_bgr = img
-                                seg_performed = True
-                    else:
-                        seg_result_labels.append({'error': f"MRI API forward failed: {forward.get('error')}"})
+                    seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(MRI_API_ENDPOINT, img_bytes, "Brain tumor detection")
 
             # Bone -> try local bone model first, otherwise forward to fracture API
             elif cid == 1:
                 if bone_model is not None:
-                    try:
-                        results = bone_model.predict(bgr_enhanced)
-                        res = results[0]
-                        annotated_bgr = res.plot()
-                        if getattr(res, 'boxes', None):
-                            for box in res.boxes:
-                                cls_id = int(box.cls[0])
-                                conf = float(box.conf[0])
-                                class_name = bone_model.names.get(cls_id, str(cls_id)) if hasattr(bone_model, 'names') else str(cls_id)
-                                seg_result_labels.append({'class': class_name, 'confidence': conf})
-                        seg_performed = True
-                        notes = 'Bone fracture detection completed using local model.'
-                    except Exception as e:
-                        seg_result_labels.append({'error': f'Bone detection failed: {e}'})
-                        notes = 'Bone detection attempted but encountered an error.'
+                    seg_result_labels, seg_performed, notes, annotated_bgr = predict_yolo(bone_model, bgr_enhanced, "Fracture detection")
                 else:
-                    forward = forward_image_to_api(FRACTURE_API_ENDPOINT, img_bytes)
-                    if forward.get('ok'):
-                        data = forward.get('json', {})
-                        # Bone API returns 'detections' and 'annotated_image'
-                        seg_result_labels = data.get('detections', []) or data.get('labels', []) or data.get('predictions', [])
-                        b64 = data.get('annotated_image') or data.get('image_base64') or data.get('annotated_image_base64')
-                        # Also include status/summary if present
-                        status = data.get('status') or data.get('summary')
-                        if status:
-                            seg_result_labels.insert(0, {'status': status})
-                        if b64:
-                            img = decode_base64_to_bgr(b64)
-                            if img is not None:
-                                annotated_bgr = img
-                                seg_performed = True
-                        notes = 'Routed to fracture detection API.'
-                    else:
-                        notes = 'Fracture detection model not available; forwarded attempt failed.'
+                    seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(FRACTURE_API_ENDPOINT, img_bytes, "Fracture detection")
 
-            # Chest -> forward to lung disease API
+            # Chest -> forward to lung disease API or local lung model
             elif cid == 2:
-                forward = forward_image_to_api(LUNG_API_ENDPOINT, img_bytes)
-                if forward.get('ok'):
-                    data = forward.get('json', {})
-                    seg_result_labels = data.get('labels', []) or data.get('predictions', [])
-                    b64 = data.get('image_base64') or data.get('annotated_image_base64')
-                    if b64:
-                        img = decode_base64_to_bgr(b64)
-                        if img is not None:
-                            annotated_bgr = img
-                            seg_performed = True
-                    notes = 'Routed to lung disease detection API.'
+                if lung_model is not None:
+                    seg_result_labels, seg_performed, notes, annotated_bgr = predict_keras(lung_model, bgr_enhanced, LUNG_CLASS_NAMES, "Lung tumor detection")
                 else:
-                    notes = 'Lung disease detection model not available; forwarded attempt failed.'
+                    seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(LUNG_API_ENDPOINT, img_bytes, "Lung disease detection")
 
             # Final notes if not set
             if not notes:
                 notes = _compose_notes(classification, seg_result_labels)
 
     elif model_sel == 'brain_tumor':
-        # Prefer local seg_model, otherwise forward to MRI API
         if seg_model is not None:
-            try:
-                results = seg_model.predict(bgr_enhanced)
-                res = results[0]
-                annotated_bgr = res.plot()
-                if getattr(res, 'boxes', None):
-                    for box in res.boxes:
-                        cls_id = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        class_name = seg_model.names.get(cls_id, str(cls_id)) if hasattr(seg_model, 'names') else str(cls_id)
-                        seg_result_labels.append({'class': class_name, 'confidence': conf})
-                seg_performed = True
-                notes = 'Brain tumor detection completed. Review highlighted regions.'
-            except Exception as e:
-                seg_result_labels.append({'error': f'Brain tumor detection failed: {e}'})
-                notes = 'Brain tumor detection attempted but encountered an error.'
+            seg_result_labels, seg_performed, notes, annotated_bgr = predict_yolo(seg_model, bgr_enhanced, "Brain tumor detection")
         else:
-            forward = forward_image_to_api(MRI_API_ENDPOINT, img_bytes)
-            if forward.get('ok'):
-                data = forward.get('json', {})
-                seg_result_labels = data.get('labels', [])
-                b64 = data.get('image_base64') or data.get('annotated_image_base64')
-                if b64:
-                    img = decode_base64_to_bgr(b64)
-                    if img is not None:
-                        annotated_bgr = img
-                        seg_performed = True
-                notes = 'Brain tumor detection performed via external API.'
-            else:
-                seg_result_labels.append({'error': forward.get('error')})
-                notes = 'Brain tumor detection API not available.'
+            seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(MRI_API_ENDPOINT, img_bytes, "Brain tumor detection")
 
     elif model_sel == 'fracture':
-        # Prefer local bone model; otherwise forward to fracture API
         if bone_model is not None:
-            try:
-                results = bone_model.predict(bgr_enhanced)
-                res = results[0]
-                annotated_bgr = res.plot()
-                detections = []
-                if getattr(res, 'boxes', None):
-                    for box in res.boxes:
-                        cls = bone_model.names.get(int(box.cls[0]), str(int(box.cls[0]))) if hasattr(bone_model, 'names') else str(int(box.cls[0]))
-                        conf = float(box.conf[0])
-                        detections.append({'class': cls, 'confidence': conf})
-                seg_result_labels = detections
-                seg_performed = True
-                notes = 'Fracture detection completed using local bone model.'
-            except Exception as e:
-                seg_result_labels.append({'error': f'Fracture detection failed: {e}'})
-                notes = 'Fracture detection attempted but encountered an error.'
+            seg_result_labels, seg_performed, notes, annotated_bgr = predict_yolo(bone_model, bgr_enhanced, "Fracture detection")
         else:
-            forward = forward_image_to_api(FRACTURE_API_ENDPOINT, img_bytes)
-            if forward.get('ok'):
-                data = forward.get('json', {})
-                seg_result_labels = data.get('detections', []) or data.get('labels', []) or data.get('predictions', [])
-                b64 = data.get('annotated_image') or data.get('image_base64') or data.get('annotated_image_base64')
-                status = data.get('status')
-                if status:
-                    seg_result_labels.insert(0, {'status': status, 'num_fractures': data.get('num_fractures')})
-                if b64:
-                    img = decode_base64_to_bgr(b64)
-                    if img is not None:
-                        annotated_bgr = img
-                        seg_performed = True
-                notes = 'Fracture detection performed via external API.'
-            else:
-                notes = 'Fracture detection model not integrated or API unreachable.'
+            seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(FRACTURE_API_ENDPOINT, img_bytes, "Fracture detection")
 
     elif model_sel == 'lung_disease':
-        # Forward to lung disease API if available
-        forward = forward_image_to_api(LUNG_API_ENDPOINT, img_bytes)
-        if forward.get('ok'):
-            data = forward.get('json', {})
-            seg_result_labels = data.get('labels', []) or data.get('predictions', [])
-            b64 = data.get('image_base64') or data.get('annotated_image_base64')
-            if b64:
-                img = decode_base64_to_bgr(b64)
-                if img is not None:
-                    annotated_bgr = img
-                    seg_performed = True
-            notes = 'Lung disease detection performed via external API.'
+        if lung_model is not None:
+            seg_result_labels, seg_performed, notes, annotated_bgr = predict_keras(lung_model, bgr_enhanced, LUNG_CLASS_NAMES, "Lung tumor detection")
         else:
-            notes = 'Lung disease detection model not integrated or API unreachable.'
+            seg_result_labels, seg_performed, notes, annotated_bgr = handle_external_api(LUNG_API_ENDPOINT, img_bytes, "Lung disease detection")
 
     else:
         notes = f'Unknown model selection: {model_sel}'
 
     image_base64 = encode_image_to_base64(annotated_bgr)
-
     response = {
         'selected_model': model_sel,
         'classification': classification,
@@ -540,6 +524,8 @@ def _compose_notes(classification: Dict[str, Any], labels: List[Dict[str, Any]])
     if labels and any('error' in x for x in labels):
         return 'MRI segmentation attempted but encountered an error. Preview shows enhanced input.'
     return 'MRI segmentation model unavailable. Preview shows enhanced input.'
+
+
 
 
 if __name__ == '__main__':

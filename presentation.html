@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Doc - Technical Deep Dive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --accent-color: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --secondary-color: #94a3b8;
+            --card-bg: #1e293b;
+            --slide-padding: 3rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slides-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: var(--slide-padding);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+            z-index: 1;
+        }
+
+        .slide.prev {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .slide.next {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: #e2e8f0;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+            max-width: 900px;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .btn-nav {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-nav:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 10;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 1rem;
+            color: var(--secondary-color);
+            font-family: monospace;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            text-align: left;
+            width: 100%;
+            max-width: 700px;
+            color: #a5f3fc;
+            font-size: 0.85rem;
+            border: 1px solid #333;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .list-detail {
+            text-align: left;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .list-detail li {
+            margin-bottom: 0.75rem;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            list-style: none;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .list-detail li i {
+            color: var(--accent-color);
+            margin-right: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        .list-detail strong {
+            color: #fff;
+            margin-right: 0.5rem;
+        }
+
+        .diagram-box {
+            border: 2px dashed var(--secondary-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 0.5rem;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-number" id="slideNumber">01 / 23</div>
+
+    <div class="slides-container">
+
+        <!-- 1. Title -->
+        <div class="slide active">
+            <img src="Images/proAr.png" alt="AI Doc Architecture"
+                style="max-width: 50%; max-height: 150px; margin-bottom: 2rem; border-radius: 1rem; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
+            <h1>AI Doc: Technical Deep Dive</h1>
+            <p>A comprehensive analysis of the deep learning architectures and inference pipeline.</p>
+        </div>
+
+        <!-- 2. The Challenge -->
+        <div class="slide">
+            <h2>The Diagnostic Challenge</h2>
+            <div class="grid">
+                <div class="card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Latency</h3>
+                    <p>Traditional analysis is slow.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-eye"></i>
+                    <h3>Accuracy</h3>
+                    <p>Human error in fatigue states.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-server"></i>
+                    <h3>Scale</h3>
+                    <p>Processing millions of images.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. The Solution -->
+        <div class="slide">
+            <h2>The AI Solution</h2>
+            <p>Multi-model orchestration for specialized diagnostics.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>EfficientNet</h3>
+                    <p>Classification</p>
+                </div>
+                <div class="card">
+                    <h3>YOLOv8</h3>
+                    <p>Segmentation</p>
+                </div>
+                <div class="card">
+                    <h3>Custom CNN</h3>
+                    <p>Disease Detection</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. System Architecture -->
+        <div class="slide">
+            <h2>System Architecture</h2>
+            <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card" style="align-items: flex-start; text-align: left;">
+                    <h3>Backend (Flask)</h3>
+                    <ul class="list-detail">
+                        <li><i class="fas fa-code"></i> <code>server.py</code>: Main entry point</li>
+                        <li><i class="fas fa-microchip"></i> PyTorch & TensorFlow Interop</li>
+                        <li><i class="fas fa-memory"></i> Model Caching & Lazy Loading</li>
+                    </ul>
+                </div>
+                <div class="card" style="align-items: flex-start; text-align: left;">
+                    <h3>Frontend</h3>
+                    <ul class="list-detail">
+                        <li><i class="fab fa-html5"></i> Semantic HTML5</li>
+                        <li><i class="fab fa-css3"></i> Modern CSS Variables</li>
+                        <li><i class="fab fa-js"></i> Async Fetch API</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. The Pipeline -->
+        <div class="slide">
+            <h2>Inference Pipeline</h2>
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <div class="diagram-box">Raw Image</div>
+                <i class="fas fa-arrow-right"></i>
+                <div class="diagram-box" style="border-color: var(--accent-color);">Preprocessing</div>
+                <i class="fas fa-arrow-right"></i>
+                <div class="diagram-box" style="border-color: var(--accent-color);">Primary Class</div>
+                <i class="fas fa-arrow-right"></i>
+                <div class="diagram-box" style="border-color: #10b981;">Routing</div>
+                <i class="fas fa-arrow-right"></i>
+                <div class="diagram-box" style="border-color: #10b981;">Specialist</div>
+            </div>
+        </div>
+
+        <!-- 6. Preprocessing -->
+        <div class="slide">
+            <h2>Deep Dive: Preprocessing</h2>
+            <p>Standardizing inputs for model consistency.</p>
+            <ul class="list-detail">
+                <li><i class="fas fa-adjust"></i> <strong>Auto-Contrast:</strong>
+                    <code>ImageOps.autocontrast(pil_img)</code> maximizes dynamic range.
+                </li>
+                <li><i class="fas fa-tint"></i> <strong>Denoising:</strong> <code>cv2.fastNlMeansDenoisingColored</code>
+                    (h=3, hColor=3) removes grain.</li>
+                <li><i class="fas fa-sun"></i> <strong>CLAHE:</strong> Contrast Limited Adaptive Histogram Equalization
+                    (Clip=2.0, Tile=8x8) enhances local details.</li>
+                <li><i class="fas fa-palette"></i> <strong>Grayscale Conversion:</strong> Reduces channel noise before
+                    re-stacking to RGB.</li>
+            </ul>
+        </div>
+
+        <!-- 7. EfficientNet Overview -->
+        <div class="slide">
+            <h2>Primary Model: EfficientNet-B0</h2>
+            <p>State-of-the-art efficiency via Compound Scaling.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Width</h3>
+                    <p>More channels per layer</p>
+                </div>
+                <div class="card">
+                    <h3>Depth</h3>
+                    <p>More layers</p>
+                </div>
+                <div class="card">
+                    <h3>Resolution</h3>
+                    <p>512x512 Input</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. EfficientNet Blocks -->
+        <div class="slide">
+            <h2>MBConv Blocks</h2>
+            <p>The core building block of EfficientNet.</p>
+            <ul class="list-detail">
+                <li><i class="fas fa-layer-group"></i> <strong>Inverted Residuals:</strong> Expands channels ->
+                    Depthwise Conv -> Projects back.</li>
+                <li><i class="fas fa-compress-arrows-alt"></i> <strong>Depthwise Separable Conv:</strong> Reduces
+                    parameters by ~9x compared to standard conv.</li>
+                <li><i class="fas fa-plus"></i> <strong>Skip Connections:</strong> Preserves gradients across deep
+                    networks.</li>
+            </ul>
+        </div>
+
+        <!-- 9. EfficientNet Activation -->
+        <div class="slide">
+            <h2>Advanced Activations</h2>
+            <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card">
+                    <h3>Swish Activation</h3>
+                    <p><code>x * sigmoid(x)</code></p>
+                    <p>Smooth, non-monotonic function that outperforms ReLU in deep networks.</p>
+                </div>
+                <div class="card">
+                    <h3>Squeeze-and-Excitation</h3>
+                    <p>Adaptive Channel Weighting</p>
+                    <p>Explicitly models inter-dependencies between channels to recalibrate feature maps.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. Custom Head -->
+        <div class="slide">
+            <h2>Custom Classification Head</h2>
+            <div class="code-block">
+                model.classifier = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(1280, 24), # Bottleneck
+                nn.ReLU(),
+                nn.Linear(24, 24), # Hidden Layer
+                nn.ReLU(),
+                nn.Linear(24, 3) # Output: Brain, Bone, Chest
+                )
+            </div>
+            <p style="margin-top: 1rem;">We replaced the default 1000-class ImageNet head with a lightweight MLP
+                optimized for our 3 classes.</p>
+        </div>
+
+        <!-- 11. EfficientNet Input -->
+        <div class="slide">
+            <h2>Input Specifications</h2>
+            <ul class="list-detail">
+                <li><i class="fas fa-ruler-combined"></i> <strong>Resolution:</strong> 512 x 512 pixels (High Res)</li>
+                <li><i class="fas fa-layer-group"></i> <strong>Channels:</strong> 3 (RGB)</li>
+                <li><i class="fas fa-calculator"></i> <strong>Normalization:</strong> Mean=[0.485, 0.456, 0.406],
+                    Std=[0.229, 0.224, 0.225]</li>
+                <li><i class="fas fa-microchip"></i> <strong>Inference Device:</strong> CUDA (GPU) if available, else
+                    CPU</li>
+            </ul>
+        </div>
+
+        <!-- 12. Bone Fracture Model Overview -->
+        <div class="slide">
+            <h2>Bone Fracture Detection</h2>
+            <p>Specialized YOLOv8 Model for X-Ray Analysis.</p>
+            <div class="grid">
+                <div class="card">
+                    <i class="fas fa-x-ray"></i>
+                    <h3>Modality</h3>
+                    <p>X-Ray Imaging</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-crosshairs"></i>
+                    <h3>Task</h3>
+                    <p>Object Detection</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-stopwatch"></i>
+                    <h3>Speed</h3>
+                    <p>Real-time (< 50ms)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. Bone Fracture Capabilities -->
+        <div class="slide">
+            <h2>Core Capabilities: Fracture</h2>
+            <ul class="list-detail">
+                <li><i class="fas fa-vector-square"></i> <strong>Precise Localization:</strong> Draws tight bounding
+                    boxes around fracture sites, pinpointing the exact injury location.</li>
+                <li><i class="fas fa-clone"></i> <strong>Multi-Fracture Detection:</strong> Capable of identifying
+                    multiple distinct fractures in a single complex trauma scan.</li>
+                <li><i class="fas fa-percentage"></i> <strong>Confidence Scoring:</strong> Assigns a probability score
+                    to each detection, aiding in prioritizing high-risk cases.</li>
+            </ul>
+        </div>
+
+        <!-- 14. Bone Fracture Clinical Value -->
+        <div class="slide">
+            <h2>Clinical Value: ER Triage</h2>
+            <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card">
+                    <h3>Missed Diagnosis Reduction</h3>
+                    <p>Acts as a second pair of eyes to catch subtle hairline fractures often missed due to fatigue.</p>
+                </div>
+                <div class="card">
+                    <h3>Workflow Optimization</h3>
+                    <p>Prioritizes positive scans for immediate radiologist review, speeding up patient care in busy
+                        ERs.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15. MRI Segmentation Model Overview -->
+        <div class="slide">
+            <h2>MRI Brain Tumor Segmentation</h2>
+            <p>Specialized YOLOv8-Seg Model for MRI Analysis.</p>
+            <div class="grid">
+                <div class="card">
+                    <i class="fas fa-brain"></i>
+                    <h3>Modality</h3>
+                    <p>MRI Scans</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-shapes"></i>
+                    <h3>Task</h3>
+                    <p>Instance Segmentation</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-layer-group"></i>
+                    <h3>Output</h3>
+                    <p>Pixel-level Masks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 16. MRI Segmentation Capabilities -->
+        <div class="slide">
+            <h2>Core Capabilities: Tumor</h2>
+            <ul class="list-detail">
+                <li><i class="fas fa-draw-polygon"></i> <strong>Pixel-Level Precision:</strong> Generates exact contours
+                    of the tumor, not just a box, separating it from healthy tissue.</li>
+                <li><i class="fas fa-ruler-vertical"></i> <strong>Boundary Delineation:</strong> Clearly defines tumor
+                    margins, critical for assessing invasion into surrounding structures.</li>
+                <li><i class="fas fa-calculator"></i> <strong>Volumetric Analysis:</strong> Segmentation masks allow for
+                    the calculation of tumor area and volume.</li>
+            </ul>
+        </div>
+
+        <!-- 17. MRI Segmentation Clinical Value -->
+        <div class="slide">
+            <h2>Clinical Value: Surgery & Monitoring</h2>
+            <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="card">
+                    <h3>Surgical Planning</h3>
+                    <p>Provides surgeons with a precise map of the tumor, aiding in safe resection planning.</p>
+                </div>
+                <div class="card">
+                    <h3>Longitudinal Monitoring</h3>
+                    <p>Enables accurate tracking of tumor growth or shrinkage over time to assess treatment efficacy.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 18. Lung CNN Overview -->
+        <div class="slide">
+            <h2>Lung Disease Model</h2>
+            <p>Custom Keras/TensorFlow Sequential CNN.</p>
+            <div class="code-block">
+                {
+                "class_name": "Sequential",
+                "config": {
+                "layers": [ ... ]
+                }
+                }
+            </div>
+            <p>Designed specifically for 3-class classification: Normal, Benign, Malignant.</p>
+        </div>
+
+        <!-- 19. Feature Extraction Layers -->
+        <div class="slide">
+            <h2>Feature Extraction</h2>
+            <ul class="list-detail">
+                <li><i class="fas fa-layer-group"></i> <strong>Block 1:</strong> Conv2D (128 filters, 8x8 kernel) ->
+                    BatchNorm -> ReLU</li>
+                <li><i class="fas fa-layer-group"></i> <strong>Block 2:</strong> Conv2D (256 filters, 5x5 kernel) ->
+                    BatchNorm -> ReLU -> MaxPool</li>
+                <li><i class="fas fa-layer-group"></i> <strong>Block 3:</strong> Conv2D (256 filters, 3x3 kernel) ->
+                    BatchNorm -> ReLU</li>
+                <li><i class="fas fa-layer-group"></i> <strong>Block 4:</strong> Conv2D (512 filters, 3x3 kernel) ->
+                    BatchNorm -> ReLU -> MaxPool</li>
+            </ul>
+        </div>
+
+        <!-- 20. Regularization -->
+        <div class="slide">
+            <h2>Regularization Strategy</h2>
+            <p>Preventing overfitting in medical data.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Batch Normalization</h3>
+                    <p>Applied after every Conv layer to stabilize learning.</p>
+                </div>
+                <div class="card">
+                    <h3>Dropout (0.5)</h3>
+                    <p>Applied in dense layers to force redundant feature learning.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 21. Classifier Head -->
+        <div class="slide">
+            <h2>Dense Classifier</h2>
+            <div class="code-block">
+                Flatten()
+                Dense(1024, activation='relu')
+                Dropout(0.5)
+                Dense(1024, activation='relu')
+                Dropout(0.5)
+                Dense(3, activation='softmax')
+            </div>
+            <p>High-capacity fully connected layers to map features to disease classes.</p>
+        </div>
+
+        <!-- 22. Training Config -->
+        <div class="slide">
+            <h2>Training Configuration</h2>
+            <ul class="list-detail">
+                <li><i class="fas fa-cog"></i> <strong>Optimizer:</strong> SGD (Stochastic Gradient Descent)</li>
+                <li><i class="fas fa-tachometer-alt"></i> <strong>Learning Rate:</strong> 0.001</li>
+                <li><i class="fas fa-chart-line"></i> <strong>Momentum:</strong> 0.0 (Standard SGD)</li>
+                <li><i class="fas fa-balance-scale"></i> <strong>Loss:</strong> Categorical Crossentropy</li>
+                <li><i class="fas fa-ruler"></i> <strong>Input Shape:</strong> 224 x 224 x 3</li>
+            </ul>
+        </div>
+
+        <!-- 23. Conclusion -->
+        <div class="slide">
+            <h2>Technical Summary</h2>
+            <p>A robust, multi-stage AI pipeline leveraging the best of Transfer Learning (EfficientNet), Object
+                Detection (YOLO), and Custom Deep Learning (Keras).</p>
+            <div style="margin-top: 3rem;">
+                <a href="index.html" class="btn-nav"
+                    style="width: auto; padding: 1rem 2rem; border-radius: 2rem; text-decoration: none; font-weight: 600;">
+                    <i class="fas fa-play" style="margin-right: 0.5rem;"></i> Launch Demo
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn-nav" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn-nav" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const slideNumber = document.getElementById('slideNumber');
+
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev', 'next');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index < currentSlide) {
+                    slide.classList.add('prev');
+                } else {
+                    slide.classList.add('next');
+                }
+            });
+
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideNumber.textContent = `${String(currentSlide + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+            prevBtn.style.cursor = currentSlide === 0 ? 'default' : 'pointer';
+            nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+            nextBtn.style.cursor = currentSlide === totalSlides - 1 ? 'default' : 'pointer';
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlides(); } }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        updateSlides();
+    </script>
+</body>
+
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <script src="js/chat.js" defer></script>
-    <script src="js/script.js" defer></script>
+    <script src="js/chat.js?v=1" defer></script>
+    <script src="js/script.js?v=1" defer></script>
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -44,8 +46,10 @@
         <div class="container">
             <div class="hero-content">
                 <h1>AI-Powered Medical Diagnostics</h1>
-                <p class="hero-subtitle">Revolutionizing healthcare with cutting-edge artificial intelligence for precise and rapid medical image analysis. Our advanced diagnostic platform helps healthcare professionals detect and diagnose medical conditions with unprecedented accuracy.</p>
-                
+                <p class="hero-subtitle">Revolutionizing healthcare with cutting-edge artificial intelligence for
+                    precise and rapid medical image analysis. Our advanced diagnostic platform helps healthcare
+                    professionals detect and diagnose medical conditions with unprecedented accuracy.</p>
+
                 <div class="hero-features">
                     <div class="feature">
                         <i class="fas fa-bolt"></i>
@@ -60,14 +64,14 @@
                         <span>Doctor-Approved</span>
                     </div>
                 </div>
-                
+
                 <div class="hero-buttons">
                     <a href="#diagnostic" class="btn btn-primary">
                         <i class="fas fa-rocket"></i> Try AI Models
                     </a>
-                    <button class="btn btn-secondary">
+                    <a href="demo.html" class="btn btn-outline">
                         <i class="fas fa-play-circle"></i> Watch Demo
-                    </button>
+                    </a>
                 </div>
             </div>
             <div class="hero-image">
@@ -94,7 +98,7 @@
                             </div>
                             <input type="radio" name="model" value="primary" id="model-primary" checked>
                         </div>
-                        
+
                         <div class="model-option" data-model="brain_tumor">
                             <div class="model-icon">
                                 <i class="fas fa-brain"></i>
@@ -105,7 +109,7 @@
                             </div>
                             <input type="radio" name="model" value="brain_tumor" id="model-brain">
                         </div>
-                        
+
                         <div class="model-option" data-model="fracture">
                             <div class="model-icon">
                                 <i class="fas fa-bone"></i>
@@ -116,7 +120,7 @@
                             </div>
                             <input type="radio" name="model" value="fracture" id="model-fracture">
                         </div>
-                        
+
                         <div class="model-option" data-model="lung_disease">
                             <div class="model-icon">
                                 <i class="fas fa-lungs"></i>
@@ -129,7 +133,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="selected-model-banner" id="selectedModelBanner">
                     <span>Selected Model: <strong>Primary Classification</strong></span>
                 </div>
@@ -184,7 +188,10 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-secondary" id="newAnalysis">New Analysis</button>
+                    <div class="result-actions">
+                        <button class="btn btn-primary" id="furtherDetails">Further Details</button>
+                        <button class="btn btn-secondary" id="newAnalysis">New Analysis</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -278,7 +285,8 @@
                         <i class="fas fa-robot"></i>
                     </div>
                     <h3>Advanced AI Technology</h3>
-                    <p>State-of-the-art deep learning models trained on thousands of medical images for accurate diagnosis.</p>
+                    <p>State-of-the-art deep learning models trained on thousands of medical images for accurate
+                        diagnosis.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -309,8 +317,9 @@
     <section class="get-in-touch" id="contact">
         <div class="container">
             <h2>Get in Touch</h2>
-            <p class="section-subtitle">Interested in collaborating on medical AI research or have questions about our diagnostic models? We'd love to hear from you.</p>
-            
+            <p class="section-subtitle">Interested in collaborating on medical AI research or have questions about our
+                diagnostic models? We'd love to hear from you.</p>
+
             <div class="contact-container">
                 <div class="contact-form-container">
                     <h3>Send us a Message</h3>
@@ -335,33 +344,33 @@
                         <button type="submit" class="btn btn-primary">Send Message</button>
                     </form>
                 </div>
-                
+
                 <div class="contact-details">
                     <div class="contact-info">
                         <h3>Contact Information</h3>
-                        
+
                         <div class="info-card">
                             <div class="info-icon">
                                 <i class="fas fa-envelope"></i>
                             </div>
                             <div class="info-content">
                                 <h4>Email Us</h4>
-                                <a href="mailto:research@aidoc.com">research@aidoc.com</a>
+                                <a href="mailto:tawfeekkamel231@gmail.com">tawfeekkamel231@gmail.com</a>
                                 <p class="info-note">Get in touch for research collaborations</p>
                             </div>
                         </div>
-                        
+
                         <div class="info-card">
                             <div class="info-icon">
                                 <i class="fas fa-phone"></i>
                             </div>
                             <div class="info-content">
                                 <h4>Call Us</h4>
-                                <a href="tel:+15551234567">+1 (555) 123-4567</a>
+                                <a href="tel:+201004244400">+20 (100) 424-44-00</a>
                                 <p class="info-note">Monday to Friday, 9 AM - 6 PM EST</p>
                             </div>
                         </div>
-                        
+
                         <div class="info-card">
                             <div class="info-icon">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -369,15 +378,16 @@
                             <div class="info-content">
                                 <h4>Visit Us</h4>
                                 <p>Medical AI Research Center<br>
-                                123 Innovation Drive, Tech City, TC 12345</p>
+                                    Alexandria, Egypt</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="research-partnerships">
                         <h3>Research Partnerships</h3>
-                        <p>We're actively seeking partnerships with medical institutions, research hospitals, and healthcare organizations to advance AI-powered diagnostics.</p>
-                        
+                        <p>We're actively seeking partnerships with medical institutions, research hospitals, and
+                            healthcare organizations to advance AI-powered diagnostics.</p>
+
                         <div class="partnership-tags">
                             <span class="tag">Clinical Trials</span>
                             <span class="tag">Data Collaboration</span>
@@ -398,7 +408,8 @@
                         <i class="fas fa-brain"></i>
                         <span>AI Doc</span>
                     </div>
-                    <p>Advanced AI-powered diagnostic platform for accurate detection of bone fractures, brain tumors, and lung diseases. Empowering healthcare professionals with cutting-edge technology.</p>
+                    <p>Advanced AI-powered diagnostic platform for accurate detection of bone fractures, brain tumors,
+                        and lung diseases. Empowering healthcare professionals with cutting-edge technology.</p>
                     <div class="social-links">
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-linkedin"></i></a>
@@ -427,7 +438,9 @@
             <div class="footer-bottom">
                 <div class="disclaimer">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p> AI Doc is a research prototype. It does not replace professional medical diagnosis. Always consult with qualified healthcare professionals for medical decisions. This tool is for educational and research purposes only.</p>
+                    <p> AI Doc is a research prototype. It does not replace professional medical diagnosis. Always
+                        consult with qualified healthcare professionals for medical decisions. This tool is for
+                        educational and research purposes only.</p>
                 </div>
                 <div class="copyright">
                     <p>&copy; 2025 AI Doc Copyright.</p>
@@ -449,6 +462,9 @@
                 </div>
             </div>
             <div class="chat-actions">
+                <button class="chat-popout" id="popoutChat" title="Open in full screen">
+                    <i class="fas fa-external-link-alt"></i>
+                </button>
                 <button class="chat-minimize" id="minimizeChat">
                     <i class="fas fa-minus"></i>
                 </button>
@@ -464,7 +480,8 @@
                 </div>
                 <div class="message-content">
                     <div class="message-text">
-                        <p>Hello! I'm your AI medical assistant. I can help you with medical information, analyze symptoms, and provide health-related guidance. How can I assist you today?</p>
+                        <p>Hello! I'm your AI medical assistant. I can help you with medical information, analyze
+                            symptoms, and provide health-related guidance. How can I assist you today?</p>
                     </div>
                     <div class="message-time">Just now</div>
                 </div>
@@ -477,6 +494,10 @@
         </div>
         <div class="chat-input-container">
             <div class="chat-input">
+                <input type="file" id="chatFileInput" accept="image/*" style="display: none;">
+                <button id="attachButton" aria-label="Attach image">
+                    <i class="fas fa-paperclip"></i>
+                </button>
                 <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
                 <button id="sendMessage" aria-label="Send message">
                     <i class="fas fa-paper-plane"></i>
@@ -497,4 +518,5 @@
 
     <!-- script.js already loaded with defer in the head -->
 </body>
+
 </html>
